@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <data>
+        <template id="thaihua_tax_invoice_delivery_document">
+            <t t-set="o" t-value="o.with_context(lang=lang)"/>
+            <t t-set="forced_vat" t-value="o.fiscal_position_id.foreign_vat"/>
+
+            <div t-call="ctp_thaihua_report.thaihua_report_tax_invoice_delivery_with_payments_external_layout_striped">
+                <div class="page">
+                    <t t-set="display_discount" t-value="any(l.discount for l in o.invoice_line_ids)"/>
+                    <table class="table table-sm o_main_table table-borderless" name="invoice_line_table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <span>รหัสสินค้า</span>
+                                    <br>ITEM NO.</br>
+                                </th>
+                                <th name="th_description" class="text-start">
+                                    <span>รายการสินค้า<br/>DESCRIPTION</span>
+                                </th>
+                                <th name="th_quantity" class="text-end">
+                                    <span>จำนวน<br/>Quantity<br/>
+                                    </span>
+                                </th>
+                                <th name="th_priceunit" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
+                                    <span>ราคาขาย<br/>PRICE</span>
+                                </th>
+                                <th name="th_price_unit" t-if="display_discount" t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
+                                    <span>Disc.%</span>
+                                </th>
+                                <th t-if="display_discount" class="text-right">ราคาสุทธิ/หน่วย<br/>Discount Unit Price</th>
+                                <!-- <t t-if="o.sh_show_multi_disc == True" groups="sh_multi_discount.group_account_multi_discount_security">
+                                    <th class="text-right">Discount Amount</th>
+                                    <th class="text-right">Discounted Total Amount</th>
+                                </t> -->
+                                <th name="th_subtotal" class="text-end">
+                                    <span groups="account.group_show_line_subtotals_tax_excluded">Amount</span>
+                                    <span groups="account.group_show_line_subtotals_tax_included" studio_groups="[{&quot;id&quot;: 23, &quot;name&quot;: &quot;Tax display B2C&quot;, &quot;display_name&quot;: &quot;Technical / Tax display B2C&quot;}]">จำนวนเงิน<br>AMOUNT</br>
+                                    </span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="invoice_tbody">
+                            <t t-set="current_subtotal" t-value="0"/>
+                            <t t-set="lines" t-value="o.invoice_line_ids.sorted(key=lambda l: (-l.sequence, l.date, l.move_name, -l.id), reverse=True)"/>
+
+                            <t t-foreach="lines" t-as="line">
+                                <t t-set="current_subtotal" t-value="current_subtotal + line.price_subtotal" groups="account.group_show_line_subtotals_tax_excluded"/>
+                                <t t-set="current_subtotal" t-value="current_subtotal + line.price_total" groups="account.group_show_line_subtotals_tax_included"/>
+
+                                <tr t-att-class="'bg-200 fw-bold o_line_section' if line.display_type == 'line_section' else 'fst-italic o_line_note' if line.display_type == 'line_note' else ''">
+                                    <t t-if="line.display_type == 'product'" name="account_invoice_line_accountable">
+                                        <td>
+                                            <span t-field="line.product_id.default_code"/>
+                                        </td>
+                                        <td name="account_invoice_line_name">
+                                            <span t-field="line.name" t-options="{'widget': 'text'}"/>
+                                            <t t-set="pos_orders" t-value="o.sudo().pos_order_ids"/>
+                                            <t t-if="pos_orders">
+                                                <div style="margin-left:15px; font-style: italic">
+                                                    <t t-set="down_payment_product" t-value="pos_orders[0].config_id.down_payment_product_id"/>
+                                                    <t t-if="line.product_id == down_payment_product">
+                                                        <t t-set="sale_orders" t-value="pos_orders[0].lines.filtered(lambda l: l.product_id == down_payment_product and l.price_subtotal_incl == line.price_total).mapped('sale_order_origin_id')"/>
+                                                        <t t-if="sale_orders">
+                                                            <t t-set="sale_order" t-value="sale_orders[0]"/>
+                                                            <t t-foreach="sale_order.order_line" t-as="sale_order_line">
+                                                                <t t-if="sale_order_line.product_id != down_payment_product">
+                                                                    <div>
+                                                                        <span style="margin-right: 5px;">
+                                                                            <t t-esc="int(sale_order_line.product_uom_qty)"/> x</span>
+                                                                        <span t-esc="sale_order_line.name"/>
+                                                                        <span style="margin: 0px 5px;">:</span>
+                                                                        <t t-esc="sale_order_line.price_total" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                                                    </div>
+                                                                </t>
+                                                            </t>
+                                                            <div style="font-weight: bold">From <t t-esc="sale_order.name"/>
+                                                            </div>
+                                                        </t>
+                                                    </t>
+                                                </div>
+                                            </t>
+                                        </td>
+                                        <td class="text-end">
+                                            <span t-field="line.quantity"/>
+                                            <span t-field="line.product_uom_id" groups="uom.group_uom"/>
+                                        </td>
+                                        <td t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
+                                            <span class="text-nowrap" t-field="line.price_unit"/>
+                                        </td>
+                                        <t t-if="display_discount">
+                                            <td t-attf-class="text-end {{ 'd-none d-md-table-cell' if report_type == 'html' else '' }}">
+                                                <span t-field="line.sh_multi_discount"/>
+                                            </td>
+                                            <td class="text-end">
+                                                <span t-esc="'{:,.2f}'.format(line.sh_discount_price_unit)"/>
+                                            </td>
+                                        </t>
+                                        <!-- <t t-if="o.move_type == 'out_invoice' or o.move_type=='out_refund'" groups="sh_multi_discount.group_account_multi_discount_security">
+                                            <t t-if="o.sh_show_multi_disc == True" groups="sh_multi_discount.group_account_multi_discount_security">
+                                                <td class="text-right">
+                                                    <span t-field="line.sh_discount_price_unit"/>
+                                                </td>
+                                                <td class="text-right">
+                                                    <span t-field="line.sh_discount_amount"/>
+                                                </td>
+                                            </t>
+                                        </t>
+                                        <t t-if="o.move_type == 'in_invoice' or o.move_type=='in_refund'" groups="sh_multi_discount.group_account_multi_discount_security">
+                                            <t t-if="o.sh_show_multi_disc == True" groups="sh_multi_discount.group_account_multi_discount_security">
+                                                <td class="text-right">
+                                                    <span t-field="line.sh_discount_price_unit"/>
+                                                </td>
+                                                <td class="text-right">
+                                                    <span t-field="line.sh_discount_amount"/>
+                                                </td>
+                                            </t>
+                                        </t>
+                                        <t t-if="o.move_type == 'out_invoice' or o.move_type=='out_refund'" groups="sh_multi_discount.group_account_multi_discount_security">
+                                            <t t-if="o.sh_show_multi_disc == True" groups="sh_multi_discount.group_account_multi_discount_security">
+                                                <td class="text-right">
+                                                    <span t-field="line.sh_discounted_total_amount"/>
+                                                </td>
+                                            </t>
+                                        </t>
+                                        <t t-if="o.move_type == 'in_invoice' or o.move_type=='in_refund'" groups="sh_multi_discount.group_account_multi_discount_security">
+                                            <t t-if="o.sh_show_multi_disc == True" groups="sh_multi_discount.group_account_multi_discount_security">
+                                                <td class="text-right">
+                                                    <span t-field="line.sh_discounted_total_amount"/>
+                                                </td>
+                                            </t>
+                                        </t> -->
+                                        <td class="text-end o_price_total">
+                                            <span class="text-nowrap" t-field="line.price_subtotal" groups="account.group_show_line_subtotals_tax_excluded"/>
+                                            <span class="text-nowrap" t-field="line.price_total" groups="account.group_show_line_subtotals_tax_included"/>
+                                        </td>
+                                    </t>
+                                    <t t-if="line.display_type == 'line_section'">
+                                        <td colspan="99">
+                                            <span t-field="line.name" t-options="{'widget': 'text'}"/>
+                                        </td>
+                                        <t t-set="current_section" t-value="line"/>
+                                        <t t-set="current_subtotal" t-value="0"/>
+                                    </t>
+                                    <t t-if="line.display_type == 'line_note'">
+                                        <td colspan="99">
+                                            <span t-field="line.name" t-options="{'widget': 'text'}"/>
+                                        </td>
+                                    </t>
+                                </tr>
+
+                                <t t-if="current_section and (line_last or lines[line_index+1].display_type == 'line_section')">
+                                    <tr class="is-subtotal text-end">
+                                        <td colspan="100">
+                                            <strong class="mr16">Subtotal</strong>
+                                            <span t-esc="current_subtotal" t-options="{&quot;widget&quot;: &quot;monetary&quot;, &quot;display_currency&quot;: o.currency_id}"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </template>
+
+        <template id="thaihua_report_tax_invoice_delivery_with_payments_external_layout_striped">
+            <div t-attf-class="o_company_#{o.company_id}_layout header" t-att-style="report_header_style">
+                <div class="o_background_header">
+                    <div class="float-end">
+                        <div class="mt0 text-end h3" t-field="o.company_id.report_header"/>
+                    </div>
+                    <img t-if="o.company_id.logo" t-att-src="image_data_uri(o.company_id.logo)" class="float-start" alt="Logo"/>
+                    <div class="float-start company_address">
+                        <span t-if="o.company_id.company_details" t-field="o.company_id.company_details"/>
+                    </div>
+                    <div class="clearfix mb8"/>
+                </div>
+
+                <div class="row">
+                    <t t-if="o.partner_shipping_id and (o.partner_shipping_id != o.partner_id)">
+                        <div class="col-6">
+                            <t t-set="information_block">
+                                <div groups="account.group_delivery_invoice_address" name="shipping_address_block">
+                                    <strong>Shipping Address:</strong>
+                                    <div t-field="o.partner_shipping_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;name&quot;], &quot;no_marker&quot;: True}"/>
+                                </div>
+                            </t>
+                        </div>
+                        <div class="col-6" name="address_not_same_as_shipping">
+                            <t t-set="address">
+                                <address class="mb-0" t-field="o.partner_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;name&quot;], &quot;no_marker&quot;: True}"/>
+                                <div t-if="o.partner_id.vat">
+                                    <t t-if="o.company_id.account_fiscal_country_id.vat_label" t-esc="o.company_id.account_fiscal_country_id.vat_label" id="inv_tax_id_label"/>
+                                    <t t-else="">Tax ID</t>:
+                                    <span t-field="o.partner_id.vat"/>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                    <t t-elif="o.partner_shipping_id and (o.partner_shipping_id == o.partner_id)">
+                        <div class="offset-col-6 col-6" name="address_same_as_shipping">
+                            <t t-set="address">
+                                <div t-if="o.partner_id.vat">
+                                    <t t-if="o.company_id.account_fiscal_country_id.vat_label" t-esc="o.company_id.account_fiscal_country_id.vat_label" id="inv_tax_id_label"/>
+                                    <t t-else="">Tax ID</t>:
+                                    <span t-field="o.partner_id.vat"/>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="offset-col-6 col-6" name="no_shipping">
+                            <t t-set="address">
+                                <address class="mb-0" t-field="o.partner_id" t-options="{&quot;widget&quot;: &quot;contact&quot;, &quot;fields&quot;: [&quot;address&quot;, &quot;name&quot;], &quot;no_marker&quot;: True}"/>
+                                <div t-if="o.partner_id.vat">
+                                    <t t-if="o.company_id.account_fiscal_country_id.vat_label" t-esc="o.company_id.account_fiscal_country_id.vat_label" id="inv_tax_id_label"/>
+                                    <t t-else="">Tax ID</t>:
+                                    <span t-field="o.partner_id.vat"/>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </div>
+
+                <div class="row text-end" style="margin-top:-30px">
+                    <div class="col-12 h4">
+                        <span>ใบกำกับภาษี/ ใบส่งของ</span>
+                        <br>TAX INVOICE/ DELIVERY</br>
+                    </div>
+                </div>
+                <div class="row small">
+                    <div class="col-2">
+                        <span>ชื่อลูกค้า</span>
+                    </div>
+                    <div class="col-4">
+                        <t t-if="o.partner_id.is_company is True">
+                            <span t-field="o.partner_id.name"/>
+                        </t>
+                        <t t-else="">
+                            <span t-field="o.partner_id.parent_id.name" t-if="o.partner_id.parent_id.name"/>
+                            <span t-field="o.partner_id.name" t-else=""/>
+                        </t>
+                    </div>
+                    <div class="col-2" style="margin-left:5px">
+                        <span>เลขที่</span>
+                    </div>
+                    <div class="col-4">
+                        <span t-field="o.name"/>
+                    </div>
+                </div>
+                <div class="row small">
+                    <div class="col-2">
+                        <span>ที่อยู่</span>
+                    </div>
+                    <div class="col-4">
+                        <span t-field="o.partner_id.street"/>
+                        <span t-field="o.partner_id.street2"/>
+                        <span t-field="o.partner_id.city"/>
+                        <span t-field="o.partner_id.zip"/>
+                    </div>
+                    <div class="col-3 small" style="margin-left:7px">
+                        <span>เลขที่ใบกำกับภาษีอย่างย่อ</span>-&gt;
+                    </div>
+                    <div class="col-3">
+                        <span t-field="o.pos_order_ids.pos_reference"/>
+                    </div>
+                </div>
+                <div class="row small">
+                    <div class="col-2">
+                        <span>โทรศัพท์</span>
+                    </div>
+                    <div class="col-4">
+                        <span t-field="o.partner_id.phone"/>
+                    </div>
+                    <div class="col-2" style="margin-left:5px">
+                        <span>วันที่</span>
+                    </div>
+                    <div class="col-4">
+                        <span t-field="o.invoice_date"/>
+                    </div>
+                </div>
+                <div class="row small">
+                    <div class="col-2">
+                        <span/>
+                    </div>
+                    <div class="col-4">
+                    </div>
+                    <div class="col-2" style="margin-left:5px">
+                        <span>ครบกำหนด</span>
+                    </div>
+                    <div class="col-4">
+                        <span t-field="o.invoice_payment_term_id"/>
+                    </div>
+                </div>
+                <div class="row small">
+                    <div class="col-2 small">
+                        <span>เลขประจำตัวผู้เสียภาษี</span>
+                    </div>
+                    <div class="col-4">
+                        <span t-field="o.partner_id.vat"/>
+                    </div>
+                    <div class="col-2" style="margin-left:5px">
+                        <span>เครดิต</span>
+                    </div>
+                    <div class="col-4">
+                        <span t-field="o.invoice_payment_term_id"/>
+                    </div>
+                </div>
+                <div class="row small">
+                    <div class="col-2">
+                        <span>ใบสั่งซื้อเลขที่</span>
+                    </div>
+                    <div class="col-4">
+                        <span t-field="o.ref"/>
+                    </div>
+                    <div class="col-2" style="margin-left:5px">
+                        <span>พนักงานขาย</span>
+                    </div>
+                    <div class="col-4">
+                        <span t-field="o.invoice_user_id"/>
+                    </div>
+                </div>
+                <div id="informations" class="row mt-4 mb-4">
+                    <div class="col-auto col-3 mw-100 mb-2" t-if="o.partner_id.ref" name="customer_code">
+                        <strong>Customer Code:</strong>
+                        <p class="m-0" t-field="o.partner_id.ref"/>
+                    </div>
+                    <div class="col-auto mw-100 mb-2" t-if="o.invoice_incoterm_id" groups="sale_stock.group_display_incoterm" name="invoice_incoterm_id">
+                        <strong>Incoterm:</strong>
+                        <p class="m-0" t-field="o.invoice_incoterm_id.code"/>
+                    </div>
+                </div>
+            </div>
+
+            <div t-attf-class="o_company_#{o.company_id.id}_layout article o_report_layout_striped {{  'o_report_layout_background' if o.company_id.layout_background in ['Geometric', 'Custom']  else  '' }}" t-attf-style="background-image: url({{ 'data:image/png;base64,%s' % o.company_id.layout_background_image.decode('utf-8') if o.company_id.layout_background_image and o.company_id.layout_background == 'Custom' else '/base/static/img/bg_background_template.jpg' if o.company_id.layout_background == 'Geometric' else ''}});" t-att-data-oe-lang="o and o.env.context.get('lang')">
+                <t t-out="0"/>
+            </div>
+
+
+            <div t-attf-class="o_company_#{o.company_id.id}_layout footer o_background_footer">
+                <div class="clearfix mb-4">
+                    <div id="total" class="row">
+                        <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'} ms-auto">
+                            <table class="table table-sm table-borderless" style="page-break-inside: avoid;">
+                                <t t-set="tax_totals" t-value="o.tax_totals"/>
+                                <t t-call="account.document_tax_totals"/>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-bold" t-esc="o.currency_id.with_context(lang='th_TH').amount_to_text(o.amount_total)"/>
+                <div class="row small">
+                <div class="col small">
+                    <span>If you have not received the goods according to the invoice or not received goods within 7 days, please inform us by letter immediately</span>
+                </div>
+                </div>
+                
+                <div class="row small text-center" style="margin-top:150px;margin-bottom:40px">
+                    <div class="col-4 small">
+                        <p>__________________________________<br/>ผู้รับสินค้า <br/> Received By </p>
+                    </div>
+                    <div class="col-4 small">
+                        <p>__________________________________<br/>ผู้ส่งสินค้า<br/> Received By </p>
+                    </div>
+                    <div class="col-4 small">
+                        <p>__________________________________<br/>ผู้อนุมัติ<br/> Approved By </p>
+                    </div>
+                </div>
+
+
+                <div class="text-center">
+                    <div t-if="report_type == 'pdf'" class="text-muted">
+                        Page:
+                        <span class="page"/>
+                        of
+                        <span class="topage"/>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template id="thaihua_report_tax_invoice_delivery_with_payments">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <!-- <div class="article" t-att-data-oe-model="o and o._name" t-att-data-oe-id="o and o.id" t-att-data-oe-lang="o and o.env.context.get('lang')"> -->
+                        <t t-set="lang" t-value="o.partner_id.lang"/>
+                        <t t-set="print_with_payments" t-value="True"/>
+                        <t t-if="o._get_name_invoice_report() == 'account.report_invoice_document'" t-call="ctp_thaihua_report.thaihua_tax_invoice_delivery_document" t-lang="lang"/>
+                        <t t-if="o._get_name_invoice_report() == 'l10n_th.report_invoice_document'" t-call="ctp_thaihua_report.thaihua_tax_invoice_delivery_document" t-lang="lang"/>
+                        <t t-out="0"/>
+                    <!-- </div> -->
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo>

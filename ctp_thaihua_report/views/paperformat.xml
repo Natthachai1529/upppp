@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="paperformat_thaihua_report" model="report.paperformat">
+            <field name="name">Thaihua Report A4 Portrait</field>
+            <field name="default" eval="True" />
+            <field name="format">A4</field>
+            <field name="orientation">Portrait</field>
+            <field name="margin_top">70</field>
+            <field name="margin_bottom">90</field>
+            <field name="margin_left">7</field>
+            <field name="margin_right">7</field>
+            <field name="header_line" eval="False" />
+            <field name="header_spacing">67</field>
+            <field name="dpi">110</field>
+        </record>
+
+        <record id="thaihua_report_account_tax_invoice_receipt" model="ir.actions.report">
+            <field name="name">ใบกำกับภาษี / ใบเสร็จรับเงิน (New)</field>
+            <field name="model">account.move</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">ctp_thaihua_report.thaihua_report_tax_invoice_receipt_with_payments</field>
+            <field name="report_file">ctp_thaihua_report.thaihua_report_tax_invoice_receipt_with_payments</field>
+            <field name="print_report_name">(object._get_report_base_filename())</field>
+            <field name="paperformat_id" ref="ctp_thaihua_report.paperformat_thaihua_report"/>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="binding_type">report</field>
+        </record>
+
+        <record id="thaihua_report_account_tax_invoice_delivery" model="ir.actions.report">
+            <field name="name">ใบกำกับภาษี / ใบส่งของ (New)</field>
+            <field name="model">account.move</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">ctp_thaihua_report.thaihua_report_tax_invoice_delivery_with_payments</field>
+            <field name="report_file">ctp_thaihua_report.thaihua_report_tax_invoice_delivery_with_payments</field>
+            <field name="print_report_name">(object._get_report_base_filename())</field>
+            <field name="paperformat_id" ref="ctp_thaihua_report.paperformat_thaihua_report"/>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="binding_type">report</field>
+        </record>
+
+        <record id="thaihua_report_account_credit_note" model="ir.actions.report">
+            <field name="name">ใบลดหนี้ (New)</field>
+            <field name="model">account.move</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">ctp_thaihua_report.thaihua_report_credit_note_with_payments</field>
+            <field name="report_file">ctp_thaihua_report.thaihua_report_credit_note_with_payments</field>
+            <field name="print_report_name">(object._get_report_base_filename())</field>
+            <field name="paperformat_id" ref="ctp_thaihua_report.paperformat_thaihua_report"/>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="binding_type">report</field>
+        </record>
+
+        <record id="thaihua_report_account_credit_note" model="ir.actions.report">
+            <field name="name">ใบลดหนี้ (New)</field>
+            <field name="model">account.move</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">ctp_thaihua_report.thaihua_report_credit_note_with_payments</field>
+            <field name="report_file">ctp_thaihua_report.thaihua_report_credit_note_with_payments</field>
+            <field name="print_report_name">(object._get_report_base_filename())</field>
+            <field name="paperformat_id" ref="ctp_thaihua_report.paperformat_thaihua_report"/>
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="binding_type">report</field>
+        </record>
+
+        <!--record id="thaihua_report_billing_note" model="ir.actions.report">
+            <field name="name">ใบวางบิล (New)</field>
+            <field name="model">account.x_customer_billing_not</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">ctp_thaihua_report.thaihua_report_tax_billing_note_with_payments</field>
+            <field name="report_file">ctp_thaihua_report.thaihua_report_tax_billing_note_with_payments</field>
+            <field name="print_report_name">(object._get_report_base_filename())</field>
+            <field name="paperformat_id" ref="ctp_thaihua_report.paperformat_thaihua_report"/>
+            <field name="binding_model_id" ref="account.model_account_x_customer_billing_not"/>
+            <field name="binding_type">report</field>
+        </record-->
+    </data>
+</odoo>
