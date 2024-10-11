@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="view_account_billing_note_form" model="ir.ui.view">
+           <field name="name">account.billing.note.form</field>
+           <field name="model">account.billing.note</field>
+           <field name="arch" type="xml">
+               <form string="Account Billing">
+                   <header>
+                        <button name="action_open" states="draft" string="Validate" groups="account.group_account_invoice" class="oe_highlight" type="object" />
+                        <button name="action_cancel" states="open" string="Cancel" groups="account.group_account_invoice" class="oe_highlight" type="object" />
+                        <button name="action_approve" states="open" string="Approve" groups="account.group_account_invoice" class="oe_highlight" type="object" />
+                        <button name="set_to_draft" states="cancel" string="Set to Draft" groups="account.group_account_invoice" class="oe_highlight" type="object" />
+                        <button name="create_payment_order" states="approve" string="Create Payment Order" groups="account.group_account_invoice" class="oe_highlight" type="object" />
+                        <field name="state" widget="statusbar" statusbar_visible="draft,open,approve,cancel" statusbar_colors="{'approve':'blue','cancel':'red'}"/>
+                    </header>
+                   <sheet>
+                       <group>
+                           <group>
+                               <field name="number"/>
+                               <field name="partner_id"/>
+                           </group>
+                           <group>
+                               <field name="date"/>
+                               <field name="billing_term_id"/>
+                           </group>
+                       </group>
+                       <notebook>
+                       <page string="Invoice Detail">
+                           <field name="line_ids">
+                               <tree editable="bottom">
+                                   <field name="invoice_id" domain="[('partner_id', '=', parent.partner_id),('state','=','open'),('move_type','=','out_invoice')]"/>
+                                   <field name="payment_term_id"/>
+                                   <field name="date_invoice"/>
+                                   <field name="due_date"/>
+                                   <field name="amount" />
+                                   <field name="balance" />
+                                   <field name="wht_total" />
+                                   <field name="paid_amount"/>
+                               </tree>
+                           </field>
+                           <group class="oe_subtotal_footer oe_right">
+                            <field name="amount_billing"/>
+                            <field name="amount_wht"/>
+                        </group>
+                       </page>
+
+                       </notebook>
+
+                   </sheet>
+                     <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+               </form>
+           </field>
+       </record>
+    <record id="view_account_billing_note_tree" model="ir.ui.view">
+        <field name="name">account.billing.note.list</field>
+        <field name="model">account.billing.note</field>
+        <field name="arch" type="xml">
+            <tree string="">
+                <field name="number"/>
+                <field name="partner_id"/>
+                <field name="date"/>
+                <field name="billing_term_id"/>
+                <field name="amount_billing"/>
+                <field name="amount_wht"/>
+                <field name="state"/>
+            </tree>
+        </field>
+    </record>
+    <record id="action_account_billing_note" model="ir.actions.act_window">
+        <field name="name">Account Billing</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">account.billing.note</field>
+        <field name="view_mode">tree,form</field>
+        <field name="help" type="html">
+          <p class="oe_view_nocontent_create">
+            Create Billing Note
+          </p><p>
+            Add Billing Note Customer
+          </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_account_billing_note"
+        parent="account.menu_finance_receivables"
+        action="action_account_billing_note"
+        sequence="3"
+    />
+</odoo>
