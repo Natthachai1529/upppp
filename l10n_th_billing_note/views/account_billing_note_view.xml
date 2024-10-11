@@ -6,11 +6,11 @@
            <field name="arch" type="xml">
                <form string="Account Billing">
                    <header>
-                        <button name="action_open" states="draft" string="Validate" groups="account.group_account_invoice" class="oe_highlight" type="object" />
-                        <button name="action_cancel" states="open" string="Cancel" groups="account.group_account_invoice" class="oe_highlight" type="object" />
-                        <button name="action_approve" states="open" string="Approve" groups="account.group_account_invoice" class="oe_highlight" type="object" />
-                        <button name="set_to_draft" states="cancel" string="Set to Draft" groups="account.group_account_invoice" class="oe_highlight" type="object" />
-                        <button name="create_payment_order" states="approve" string="Create Payment Order" groups="account.group_account_invoice" class="oe_highlight" type="object" />
+                        <button name="action_open" attrs="draft" string="Validate" groups="account.group_account_invoice" class="oe_highlight" type="object" />
+                        <button name="action_cancel" attrs="open" string="Cancel" groups="account.group_account_invoice" class="oe_highlight" type="object" />
+                        <button name="action_approve" attrs="open" string="Approve" groups="account.group_account_invoice" class="oe_highlight" type="object" />
+                        <button name="set_to_draft" attrs="cancel" string="Set to Draft" groups="account.group_account_invoice" class="oe_highlight" type="object" />
+                        <button name="create_payment_order" attrs="approve" string="Create Payment Order" groups="account.group_account_invoice" class="oe_highlight" type="object" />
                         <field name="state" widget="statusbar" statusbar_visible="draft,open,approve,cancel" statusbar_colors="{'approve':'blue','cancel':'red'}"/>
                     </header>
                    <sheet>
